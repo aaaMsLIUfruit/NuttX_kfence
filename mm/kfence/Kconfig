@@ -1,0 +1,136 @@
+#
+# For a description of the syntax of this configuration file,
+# see the file kconfig-language.txt in the NuttX tools repository.
+#
+
+config MM_KFENCE
+	bool "Kernel Electric Fence (KFENCE)"
+	default y
+	---help---
+		KFENCE is a low-overhead memory error detector designed to detect
+		out-of-bounds access and use-after-free bugs. It works by placing
+		allocations on page boundaries with guard pages, detecting when
+		illegal accesses occur via page faults.
+
+if MM_KFENCE
+
+config MM_KFENCE_INTERVAL
+	int "KFENCE sampling interval"
+	default 100
+	range 1 10000
+	---help---
+		KFENCE operates as a sampling allocator, meaning it only instruments
+		a certain portion of memory allocations. This option controls how
+		frequently an allocation is selected for KFENCE instrumentation.
+		A value of 100 means approximately 1 in 100 allocations will be
+		guarded by KFENCE. Lower values provide more coverage but increase
+		overhead.
+
+config MM_KFENCE_NUM_OBJECTS
+	int "Number of KFENCE objects"
+	default 64
+	range 16 1024
+	---help---
+		The maximum number of memory allocations that can be simultaneously
+		guarded by KFENCE. This determines the size of the metadata array
+		and affects memory consumption. Each object requires a minimum of
+		2 pages of memory.
+
+config MM_KFENCE_POOL_SIZE
+	int "KFENCE pool size in bytes"
+	default 2097152
+	---help---
+		Size of the memory pool used for KFENCE allocations in bytes.
+		The default is 2MB (2097152 bytes). This memory is reserved
+		exclusively for KFENCE and is not available for regular
+		allocations.
+
+config MM_KFENCE_REPORT_STACKTRACE
+	bool "Enable stacktrace in KFENCE reports"
+	default y
+	---help---
+		When enabled, KFENCE will collect and report stack traces when
+		memory errors are detected. This helps identify the source of
+		the error but adds some overhead.
+
+config MM_KFENCE_STACK_DEPTH
+	int "Maximum stack depth for KFENCE reports"
+	default 32
+	range 8 128
+	depends on MM_KFENCE_REPORT_STACKTRACE
+	---help---
+		Maximum number of stack frames to include in KFENCE error reports.
+		Larger values provide more context but consume more memory and
+		may slow down error reporting.
+
+config MM_KFENCE_DELAY_FREE
+	bool "Delay free to detect use-after-free"
+	default y
+	---help---
+		When enabled, KFENCE will delay freeing objects to increase the
+		chance of detecting use-after-free bugs. The freed objects remain
+		protected but are not immediately returned to the allocator.
+
+config MM_KFENCE_DELAY_FREE_MS
+	int "Delay in milliseconds before returning freed objects"
+	default 1000
+	range 100 10000
+	depends on MM_KFENCE_DELAY_FREE
+	---help---
+		The amount of time in milliseconds to keep freed objects protected
+		before returning them to the allocator. Longer delays increase the
+		chance of detecting use-after-free bugs but may reduce the number
+		of available KFENCE objects.
+
+config MM_KFENCE_VERBOSE
+	bool "Enable verbose KFENCE reporting"
+	default n
+	---help---
+		When enabled, KFENCE will output more detailed information about
+		errors and its operation. This is useful for debugging but
+		generates more output.
+
+config MM_KFENCE_STRESS_TEST
+	bool "Enable KFENCE stress testing"
+	default n
+	---help---
+		When enabled, KFENCE will use a more aggressive allocation strategy
+		to increase the chances of detecting bugs. This may significantly
+		increase overhead and is primarily intended for testing KFENCE itself.
+
+
+
+config MM_KFENCE_TEST
+	bool "Include KFENCE self-tests"
+	default n
+	---help---
+		When enabled, includes self-tests for KFENCE. These tests verify
+		that KFENCE can correctly detect various types of memory errors.
+		This is primarily intended for testing KFENCE itself.
+
+config MM_KFENCE_MEM_POOL_ALIGN
+	int "Memory pool alignment"
+	default 32
+	---help---
+		Alignment of the KFENCE memory pool. Higher values may improve
+		performance on some architectures but consume more memory.
+		Must be a power of 2.
+
+config MM_KFENCE_DISABLE_PANIC
+	bool "Disable panic on KFENCE errors"
+	default n
+	---help---
+		When enabled, KFENCE will report errors but will not cause a
+		system panic. This allows the system to continue running after
+		a memory error is detected, but may lead to further corruption
+		if the error is severe.
+
+endif # MM_KFENCE
+
+config MM_KFENCE_TRACK_ALLOCS
+	bool "Track allocation statistics"
+	default y
+	---help---
+		When enabled, KFENCE will track and report allocation statistics,
+		such as the number of allocations monitored, errors detected, etc.
+		This helps evaluate KFENCEs effectiveness at runtime.

@@ -21,6 +21,7 @@
 ############################################################################
 
 # Check if the system has been configured
+include Make.defs
 
 ifeq ($(wildcard .config),)
 .DEFAULT default:
